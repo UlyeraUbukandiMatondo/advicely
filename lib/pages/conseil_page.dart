@@ -1,12 +1,12 @@
-import 'package:advicely/data/model.dart';
-import 'package:advicely/widgets/copie_button.dart';
+import 'package:advicely/widgets/copie_button.dart' show CopieButton;
 import 'package:advicely/widgets/generer_button.dart';
-import 'package:advicely/widgets/panneau_central.dart';
+import 'package:advicely/widgets/traduction_button.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:advicely/data/datasource.dart' as datasource;
+import 'package:advicely/data/datasource.dart'
+    as datasource
+    show genererConseil, traduireEnFrancais;
 
 class ConseilPage extends StatefulWidget {
   @override
@@ -14,19 +14,69 @@ class ConseilPage extends StatefulWidget {
 }
 
 class _ConseilPageState extends State<ConseilPage> {
+  String texte = "";
+  String texteTraduit = "";
+  bool chargement = false;
+
+  Future<void> generer() async {
+    setState(() {
+      chargement = true;
+      texteTraduit = "";
+    });
+
+    final conseil = await datasource.genererConseil();
+
+    setState(() {
+      texte = conseil.conseilTexte;
+      chargement = false;
+    });
+  }
+
+  Future<void> traduire() async {
+    if (texte.isEmpty) return;
+
+    setState(() {
+      chargement = true;
+    });
+
+    try {
+      final traduction = await datasource.traduireEnFrancais(texte);
+
+      print("TRADUCTION OK : $traduction");
+
+      setState(() {
+        texteTraduit = traduction;
+      });
+    } catch (e) {
+      print("ERREUR TRADUCTION : $e");
+      setState(() {
+        texteTraduit = "Erreur lors de la traduction";
+      });
+    }
+
+    setState(() {
+      chargement = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    generer();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final panneauCentral = PanneauCentral(future: datasource.genererConseil());
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF5A7D75),
+        backgroundColor: const Color(0xFF5A7D75),
         title: Text("Advicely", style: GoogleFonts.inter(color: Colors.white)),
         centerTitle: true,
       ),
       body: Container(
-        constraints: BoxConstraints.expand(),
-        color: Color(0xFFEDFFE4),
-        padding: EdgeInsets.all(20),
+        constraints: const BoxConstraints.expand(),
+        color: const Color(0xFFEDFFE4),
+        padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -35,36 +85,76 @@ class _ConseilPageState extends State<ConseilPage> {
                 "Conseil de vie",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.enriqueta(
-                  color: Color(0xFF2E554C),
+                  color: const Color(0xFF2E554C),
                   fontSize: 32,
                 ),
               ),
-              SizedBox(height: 10),
+
+              const SizedBox(height: 30),
+
               Center(
                 child: Image.asset(
-                  "assets/img/advicely.jpg",
+                  "assets/img/advicely.png",
+                  color: Color(0xFF2E554C),
+                  colorBlendMode: BlendMode.srcIn,
                   height: 86,
                   width: 90,
                 ),
               ),
-              SizedBox(height: 30),
-              panneauCentral,
-              SizedBox(height: 30),
+
+              const SizedBox(height: 30),
+
+              Container(
+                height: 250,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5A7D75),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(25),
+                    bottomLeft: Radius.circular(25),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(100),
+                      offset: const Offset(0, 4),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: chargement
+                    ? const Center(child: CircularProgressIndicator())
+                    : Center(
+                        child: Text(
+                          texteTraduit.isNotEmpty ? texteTraduit : texte,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.enriqueta(
+                            color: Colors.white,
+                            fontSize: 28,
+                          ),
+                        ),
+                      ),
+              ),
+
+              const SizedBox(height: 30),
+
               Row(
                 children: [
-                  Expanded(
-                    child: GenererButton(
-                      onPressed: () {
-                        setState(() {}); //Actualise la page
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 30),
+                  Expanded(child: GenererButton(onPressed: generer)),
+
+                  const SizedBox(width: 15),
+
+                  Expanded(child: TraductionButton(onPressed: traduire)),
+
+                  const SizedBox(width: 15),
+
                   CopieButton(
                     onPressed: () async {
                       try {
-                        await FlutterClipboard.copy(panneauCentral.texte);
-                      } on ClipboardException catch (e) {}
+                        await FlutterClipboard.copy(
+                          texteTraduit.isNotEmpty ? texteTraduit : texte,
+                        );
+                      } on ClipboardException {}
                     },
                   ),
                 ],
