@@ -37,6 +37,7 @@ dependencies:
   google_fonts: ^8.0.2
   clipboard: ^3.0.14
   flutter_svg: ^2.2.3
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
