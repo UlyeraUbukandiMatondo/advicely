@@ -42,7 +42,7 @@ class _ConseilPageState extends State<ConseilPage> {
     try {
       final traduction = await datasource.traduireEnFrancais(texte);
 
-      print("TRADUCTION REUSSI VEC SUCCES! : $traduction");
+      print("TRADUCTION REUSSI AVEC SUCCES! : $traduction");
 
       setState(() {
         texteTraduit = traduction;
