@@ -42,15 +42,15 @@ class _ConseilPageState extends State<ConseilPage> {
     try {
       final traduction = await datasource.traduireEnFrancais(texte);
 
-      print("TRADUCTION OK : $traduction");
+      print("TRADUCTION REUSSI VEC SUCCES! : $traduction");
 
       setState(() {
         texteTraduit = traduction;
       });
     } catch (e) {
-      print("ERREUR TRADUCTION : $e");
+      print("Erreur de la traduction : $e");
       setState(() {
-        texteTraduit = "Erreur lors de la traduction";
+        texteTraduit = "Erreur: Une errur se produit";
       });
     }
 
